@@ -1189,6 +1189,11 @@ function gotoEntry(id){
   el.scrollIntoView({behavior:"smooth", block:"start"});
   el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
   setTimeout(() => { el.scrollIntoView({behavior:"smooth", block:"start"}); el.classList.add("in"); }, 700);
+  setTimeout(() => {   /* 兜底：个别环境平滑滚动不生效时，直接定位 */
+    const t = el.getBoundingClientRect().top;
+    if (Math.abs(t) > 260) el.scrollIntoView({behavior:"auto", block:"start"});
+    el.classList.add("in");
+  }, 1400);
 }
 
 /* ================= 记忆卡 ================= */
