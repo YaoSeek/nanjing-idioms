@@ -1185,9 +1185,10 @@ function entryHTML(e){
 function gotoEntry(id){
   const el = document.getElementById("e-" + id);
   if (!el) return;
+  el.classList.add("in");   /* 跳转目标立即显现，避免动画未触发造成短暂空白 */
   el.scrollIntoView({behavior:"smooth", block:"start"});
   el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
-  setTimeout(() => el.scrollIntoView({behavior:"smooth", block:"start"}), 700);
+  setTimeout(() => { el.scrollIntoView({behavior:"smooth", block:"start"}); el.classList.add("in"); }, 700);
 }
 
 /* ================= 记忆卡 ================= */
@@ -1295,14 +1296,23 @@ document.addEventListener("keydown", ev => {
 });
 refreshZoomables();
 
-/* ================= 滚动浮现 ================= */
+/* ================= 滚动浮现（fail-open：任何情况下都不会停留在隐藏态） ================= */
 let revealObs;
+function revealSweep(){
+  const vh = window.innerHeight || 800;
+  $$(".reveal:not(.in)").forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.top < vh * 0.97 && r.bottom > 0) el.classList.add("in");
+  });
+}
 function observeReveal(){
   if (revealObs) revealObs.disconnect();
   revealObs = new IntersectionObserver(es => {
     es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); revealObs.unobserve(e.target); } });
   }, {threshold: 0.06});
   $$(".reveal").forEach(el => revealObs.observe(el));
+  revealSweep();
+  setInterval(revealSweep, 500);   /* 兜底扫描：程序化跳转/异常环境下 ≤0.5s 内显现 */
 }
 observeReveal();
 </script>
